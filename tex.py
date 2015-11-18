@@ -1,6 +1,7 @@
 import re
 
 def _parse_command(string):
+    """Parse command into name, options, and arguments"""
     p = re.compile(r'\\(?P<command>\w+)((?P<options>[\w,=\.\[\]]+)){0,1}((?P<args>[\w\.\{\}\\ ]+))*', flags=re.IGNORECASE)
     match = re.search(p, string)
     if match:
@@ -20,7 +21,7 @@ def _parse_command(string):
         return None
 
 def _strip(string, pattern, flags):
-    """ """
+    """Factory for stripping functions"""
     p = re.compile(pattern, flags)
     match = re.search(p, string).group('match')
     string = string.replace(match, '')
@@ -46,7 +47,31 @@ def _parse_header(string):
 
 def _parse_body(string):
     """ """
-
+    string, body = _strip(string, pattern=r'\\begin\{document\}\n*\\make[a-zA-Z]*title\n*(?P<match>[\w\n\\\[\]\{\} /,#\(\)/.:&\*-]+)\\end\{document\}', flags=re.IGNORECASE)
+    body = body.strip(' \n')
+    section_list = []
+    for section in body.split('\\section'):
+        if len(section) > 0:
+            match = re.search(r'^\{[\w -]+\}\n+', section)
+            if match:
+                section_name = match.group()
+                section = section.replace(section_name, '')
+                section_name = section_name.strip('{}\n')
+                subsection_list = []
+                for subsection in section.split('\\subsection'):
+                    if len(subsection) > 0:
+                        match = re.search(r'^\{[\w /-]+\}\n+', subsection)
+                        if match:
+                            subsection_name = match.group()
+                            subsection = section.replace(subsection_name, '')
+                            subsection_name = section_name.strip('{}\n')
+                            subsection_list.append({subsection_name : subsection})
+                        else:
+                            subsection_list.append(subsection)
+                section_list.append({section_name : subsection_list})
+            else:
+                section_list.append(section)
+    return string, section_list
 
 def loads(string):
     """Parse LaTeX-formatted string into nested dictionary"""
