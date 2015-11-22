@@ -1,89 +1,154 @@
 import re
+import types
 
-def _parse_command(string):
-    """Parse command into name, options, and arguments"""
-    p = re.compile(r'\\(?P<command>\w+)((?P<options>[\w,=\.\[\]]+)){0,1}((?P<args>[\w\.\{\}\\ ]+))*', flags=re.IGNORECASE)
-    match = re.search(p, string)
-    if match:
-        command = match.group('command')
-        if match.group('options'):
-            options = match.group('options').strip('[]').split(',')
+# Character Escaping
+
+ESC_MAP = {'&' : '\\&', '%' : '\\%', '$' : '\\$', '#' : '\\#', '_' : '\\_', '{' : '\\{', '}' : '\\{', '~' : '\\~', '^' : '\\^'}
+REV_ESC_MAP = {value : key for key, value in ESC_MAP.items()}
+FROM_TEX_SUB = {r'\\\\' : r'\n'}
+
+# Error Messages
+
+E_ENCODING = 'File not in valid TeX encoding'
+E_INPUT = 'Unrecognized input'
+
+# Regular Expression Patterns
+
+# add begin
+# add item
+P_ARGUMENTs = re.compile(r'\{((?P<arguments>[\w\.\{\}\\ ]+)\})*', flags=re.I)
+P_COMMAND = re.compile(r'\\(?P<command>\w+)', flags=re.I)
+P_COMMENT = re.compile(r'%(?P<comment>.+)\n', flags=re.I)
+P_TEXT = re.compile(r'(?P<text>([\w ]+[\n]{0,1})+)', flags=re.I)
+P_OPTIONS = re.compile(r'(\[(?P<options>[\w,=\.]+)\])', flags=re.I)
+
+class TeXError(Exception):
+
+    def __init__(self, msg, stm=None, pos=0):
+        if stm:
+            msg += ' at position {}, "{}"'.format(pos, repr(stm.substr(post, 32)))
+        Exception.__init__(self, msg)
+
+class ArgumentsToken(object):
+
+    def __init__(self, string):
+        self.data = string.split('}{')
+
+class CommandToken(object):
+
+    def __init__(self, string):
+        self.data = string
+
+class CommentToken(object):
+
+    def __init__(self, string):
+        self.data = string
+
+class EOFToken(object):
+    pass
+
+class TextToken(object):
+
+    def __init__(self, string):
+        self.data = string
+
+class OptionsToken(object):
+
+    def __init__(self, string):
+        pass
+
+class FileIn(object):
+
+    def __init__(self, f):
+        self.data = f.read()
+        if f.encoding not in ['UTF-8', 'ASCII']:
+            raise TexError(E_ENCODING)
+        for pattern, replacement in FROM_TEX_SUB.items():
+            self.data = re.sub(pattern, replacement, self.data)
+        self.newline_char = f.newlines
+        self.length = len(self.data)
+
+    def read():
+        return self.data
+
+    def read_lines():
+        for line in self.data.split(newline_char):
+            yield line
+
+def tokenize(string):
+    skip_list = [' ', '\n']
+    while string:
+        while string[0] in skip_list:
+            string = string[1:]
+        comment_match = P_COMMENT.match(string)
+        if comment_match:
+            string = string[comment_match.end():]
+            yield CommentToken(comment_match.group('comment'))
         else:
-            options = None
-        if match.group('args'):
-            args = re.findall(r'(?<=\{)[\w\.\\ ]*(?=\})', match.group('args'))
-        else:
-            args = None
-        return {'command' : command,
-                'options' : options,
-                'args' : args}
-    else:
-        return None
-
-def _strip(string, pattern, flags):
-    """Factory for stripping functions"""
-    p = re.compile(pattern, flags)
-    match = re.search(p, string).group('match')
-    string = string.replace(match, '')
-    return string, match
-
-def _parse_comments(string):
-    """Strip comments from string, return string and comments"""
-    item_list = []
-    p = re.compile(r'%.+\n', flags=re.IGNORECASE)
-    for comment_line in re.finditer(p, string):
-        item_list.append(comment_line.group())
-        string = string.replace(comment_line.group(), '')
-    return string, item_list
-
-def _parse_header(string):
-    """Strip header from string, return string and header"""
-    string, header = _strip(string, pattern=r'^(?P<match>.+)\\begin{document}', flags=re.DOTALL|re.IGNORECASE)
-    item_list = []
-    p = re.compile(r'\\.+')
-    for match in re.findall(p, header):
-        item_list.append(_parse_command(match))
-    return string, item_list
-
-def _parse_body(string):
-    """ """
-    string, body = _strip(string, pattern=r'\\begin\{document\}\n*\\make[a-zA-Z]*title\n*(?P<match>[\w\n\\\[\]\{\} /,#\(\)/.:&\*-]+)\\end\{document\}', flags=re.IGNORECASE)
-    body = body.strip(' \n')
-    section_list = []
-    for section in body.split('\\section'):
-        if len(section) > 0:
-            match = re.search(r'^\{[\w -]+\}\n+', section)
-            if match:
-                section_name = match.group()
-                section = section.replace(section_name, '')
-                section_name = section_name.strip('{}\n')
-                subsection_list = []
-                for subsection in section.split('\\subsection'):
-                    if len(subsection) > 0:
-                        match = re.search(r'^\{[\w /-]+\}\n+', subsection)
-                        if match:
-                            subsection_name = match.group()
-                            subsection = section.replace(subsection_name, '')
-                            subsection_name = section_name.strip('{}\n')
-                            subsection_list.append({subsection_name : subsection})
-                        else:
-                            subsection_list.append(subsection)
-                section_list.append({section_name : subsection_list})
+            command_match = P_COMMAND.match(string)
+            if command_match:
+                string = string[command_match.end():]
+                yield CommandToken(command_match.group('command'))
             else:
-                section_list.append(section)
-    return string, section_list
+                options_match = P_OPTIONS.match(string)
+                if options_match:
+                    string = string[options_match.end():]
+                    yield OptionsToken(options_match.group('options'))
+                else:
+                    arguments_match = P_ARGUMENTs.match(string)
+                    if arguments_match:
+                        string = string[arguments_match.end():]
+                        yield ArgumentsToken(arguments_match.group('arguments'))
+                    else:
+                        tmp_string = copy(string)
+                        for key, value in REV_ESC_MAP:
+                            tmp_string = re.sub(key, value, tmp_string)
+                        text_match = P_TEXT.match(string)
+                        if text_match:
+                            n_missing = len(string) - len(tmp_string)
+                            string = string[text_match.end() + n_missing:]
+                            yield TextToken(text_match.group('text'))
+                        else: raise TexError(' - '.join([E_INPUT, string[:25]]))
+    yield EOFToken()
 
-def loads(string):
-    """Parse LaTeX-formatted string into nested dictionary"""
-    string = string.strip(' \n')
-    string, comment_list = _parse_comments(string)
-    string, header_list = _parse_header(string)
-    string, body_list = _parse_body(string)
-    if len(string) > 0:
-        print("The algorithm failed to match the following: {}".format(string))
-    return {'header' : header_list,
-            'body' : body_list,
-            'comments' : comment_list}
+class Parser(object):
 
-def dumps(string):
-    """Parse dictionary into LaTeX-formatted string"""
+    def next():
+        self.current = self.lexer.__next__()
+
+    def __init__(self, lexer):
+        self.lexer = lexer
+        self.next()
+
+    def parse(self):
+        stack = []
+        result = []
+        state = 1
+        while state != 0:
+            if state == 1:
+                self.next()
+                if is.instance(self.current, CommentToken):
+                    result.append(self.current)
+                if is.instance(self.current, CommandToken):
+                    pass
+                if is.instance(self.current, TextToken):
+                    pass
+                state = 1
+            if state == 2:
+                if is.instance(self.current, OptionsToken):
+                    pass
+                    self.next()
+                if is.instance(self.current, ArgumentsToken):
+                    pass
+                    self.next()
+                state = 0
+        return result
+
+def loads(f):
+    return Parser(tokenize(FileIn(f))).parse()
+
+def dumps(obj, f):
+    return True
+
+def find(obj):
+    return True
