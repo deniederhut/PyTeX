@@ -1,9 +1,10 @@
+import collections
 import re
 import types
 
 # Character Escaping
 
-ESC_MAP = {'&' : '\\&', '%' : '\\%', '$' : '\\$', '#' : '\\#', '_' : '\\_', '{' : '\\{', '}' : '\\{', '~' : '\\~', '^' : '\\^'}
+ESC_MAP = {'&' : '\\&', '%' : '\\%', '$' : '\\$', '#' : '\\#', '_' : '\\_', '{' : '\\{', '}' : '\\{', '~' : '\\~', '^' : '\\^', '<' : '/<', '>' : '\>'}
 REV_ESC_MAP = {value : key for key, value in ESC_MAP.items()}
 FROM_TEX_SUB = {r'\\\\' : r'\n'}
 
@@ -13,14 +14,19 @@ E_ENCODING = 'File not in valid TeX encoding'
 E_INPUT = 'Unrecognized input'
 
 # Regular Expression Patterns
+regex = collections.namedtuple('regex', ['name', 'pattern'])
 
-# add begin
-# add item
-P_ARGUMENTs = re.compile(r'\{((?P<arguments>[\w\.\{\}\\ ]+)\})*', flags=re.I)
-P_COMMAND = re.compile(r'\\(?P<command>\w+)', flags=re.I)
-P_COMMENT = re.compile(r'%(?P<comment>.+)\n', flags=re.I)
-P_TEXT = re.compile(r'(?P<text>([\w ]+[\n]{0,1})+)', flags=re.I)
-P_OPTIONS = re.compile(r'(\[(?P<options>[\w,=\.]+)\])', flags=re.I)
+P_COMMENT = regex('Comment', re.compile(r'%.+\n', flags=re.I))
+P_END_ARG = regex('EndOfArgument', re.compile(r'\}'))
+P_END_OPT = regex('EndOfOption', re.compile(r'\]'))
+P_ESCAPED = regex('Escaped', re.compile(r'\\' + '|'.join(REV_ESC_MAP.keys())))
+P_FUNCTION = regex('Function', re.compile(r'\\'))
+P_NEWLINE = regex('Newline', re.compile(r'\n|\\\\'))
+P_START_ARG = regex('StartOfArgument', re.compile(r'\{'))
+P_START_OPT = regex('StartOfOption', re.compile(r'\['))
+P_TEXT = regex('Text', re.compile(r'[\w`\'\,\.\(\)]+'))
+
+RE_LIST = [P_COMMENT, P_NEWLINE, P_ESCAPED, P_FUNCTION, P_START_ARG, P_START_OPT, P_END_ARG, P_END_OPT, P_TEXT]
 
 class TeXError(Exception):
 
@@ -29,33 +35,11 @@ class TeXError(Exception):
             msg += ' at position {}, "{}"'.format(pos, repr(stm.substr(post, 32)))
         Exception.__init__(self, msg)
 
-class ArgumentsToken(object):
+class Token(object):
 
-    def __init__(self, string):
-        self.data = string.split('}{')
-
-class CommandToken(object):
-
-    def __init__(self, string):
+    def __init__(self, string, name):
         self.data = string
-
-class CommentToken(object):
-
-    def __init__(self, string):
-        self.data = string
-
-class EOFToken(object):
-    pass
-
-class TextToken(object):
-
-    def __init__(self, string):
-        self.data = string
-
-class OptionsToken(object):
-
-    def __init__(self, string):
-        pass
+        self.name = name
 
 class FileIn(object):
 
@@ -76,72 +60,78 @@ class FileIn(object):
             yield line
 
 def tokenize(string):
-    skip_list = [' ', '\n']
+    skip_list = [' ']
     while string:
         while string[0] in skip_list:
             string = string[1:]
-        comment_match = P_COMMENT.match(string)
-        if comment_match:
-            string = string[comment_match.end():]
-            yield CommentToken(comment_match.group('comment'))
-        else:
-            command_match = P_COMMAND.match(string)
-            if command_match:
-                string = string[command_match.end():]
-                yield CommandToken(command_match.group('command'))
-            else:
-                options_match = P_OPTIONS.match(string)
-                if options_match:
-                    string = string[options_match.end():]
-                    yield OptionsToken(options_match.group('options'))
-                else:
-                    arguments_match = P_ARGUMENTs.match(string)
-                    if arguments_match:
-                        string = string[arguments_match.end():]
-                        yield ArgumentsToken(arguments_match.group('arguments'))
-                    else:
-                        tmp_string = copy(string)
-                        for key, value in REV_ESC_MAP:
-                            tmp_string = re.sub(key, value, tmp_string)
-                        text_match = P_TEXT.match(string)
-                        if text_match:
-                            n_missing = len(string) - len(tmp_string)
-                            string = string[text_match.end() + n_missing:]
-                            yield TextToken(text_match.group('text'))
-                        else: raise TexError(' - '.join([E_INPUT, string[:25]]))
-    yield EOFToken()
+        i = 0
+        for item in RE_LIST:
+            match = re.match(item.pattern, string)
+            if match:
+                i += 1
+                string = string[match.end():]
+                yield Token(match.group(), item.name)
+        if i == 0:
+            raise TexError(' - '.join([E_INPUT, string[:25]]))
+    yield Token('', 'EOF')
 
 class Parser(object):
 
     def __init__(self, lexer):
         self.lexer = lexer
-        self.next()
-    
+        self.current = None
+
     def next():
         self.current = self.lexer.__next__()
 
-    def parse(self):
-        stack = []
+    def _parse_arg():
+
+    def _parse_func():
+
+    def _parse_opt():
+        
+    def parse(self, state=1):
         result = []
-        state = 1
         while state != 0:
+            self.next()
+            name = self.current.name
+            data = self.current.data
             if state == 1:
-                self.next()
-                if is.instance(self.current, CommentToken):
-                    result.append(self.current)
-                if is.instance(self.current, CommandToken):
-                    pass
-                if is.instance(self.current, TextToken):
-                    pass
-                state = 1
+                if name == 'Text':
+                    try:
+                        result.append(' '.join([result.pop, data]))
+                    except IndexError:
+                        result.append(data)
+                elif name == 'Comment':
+                    result.append({name : data})
+                elif name == 'Function':
+                    result.append({name : self.parse(state=2))
+
+                elif name == 'Escaped':
+                elif name == 'Newline':
+                elif name == 'EOF':
+                    state = 0
             if state == 2:
-                if is.instance(self.current, OptionsToken):
-                    pass
-                    self.next()
-                if is.instance(self.current, ArgumentsToken):
-                    pass
-                    self.next()
-                state = 0
+                if name == 'Text':
+                    if data == 'begin':
+                    elif data == 'section':
+                    elif data == 'subsection':
+                    else:
+                        result.append({'command' : data})
+                elif name == 'StartOfOption':
+                    result[-1]['options'] = self.parse(state=3)
+                elif name == 'StartOfArgument':
+                    result[-1]
+            if state == 3:
+                if name == 'Text':
+                    result.append(data)
+                elif name == 'EndOfOption':
+                    return result
+            if state == 4:
+                if name == 'Text':
+                    result.append(data)
+                elif name == 'EndOfArgument':
+                    return result
         return result
 
 def loads(f):
