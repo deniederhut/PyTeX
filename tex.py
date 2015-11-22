@@ -113,12 +113,12 @@ def tokenize(string):
 
 class Parser(object):
 
-    def next():
-        self.current = self.lexer.__next__()
-
     def __init__(self, lexer):
         self.lexer = lexer
         self.next()
+    
+    def next():
+        self.current = self.lexer.__next__()
 
     def parse(self):
         stack = []
