@@ -17,15 +17,18 @@ E_SYNTAX = '{} where {} was expected'
 # Regular Expression Patterns
 regex = collections.namedtuple('regex', ['name', 'pattern'])
 
+# Tokenize begin
 P_COMMENT = regex('Comment', re.compile(r'%.+\n', flags=re.I))
+# Tokenize end
 P_END_ARG = regex('EndOfArgument', re.compile(r'\}'))
 P_END_OPT = regex('EndOfOption', re.compile(r'\]'))
 P_ESCAPED = regex('Escaped', re.compile(r'\\' + '|'.join(REV_ESC_MAP.keys())))
 P_FUNCTION = regex('Function', re.compile(r'\\'))
+# Tokenize item
 P_NEWLINE = regex('Newline', re.compile(r'\n|\\\\'))
 P_START_ARG = regex('StartOfArgument', re.compile(r'\{'))
 P_START_OPT = regex('StartOfOption', re.compile(r'\['))
-# Tokenize section and subsection?
+# Tokenize section and subsection
 P_TEXT = regex('Text', re.compile(r'[\w`\'\,\.\(\)]+'))
 
 RE_LIST = [P_COMMENT, P_NEWLINE, P_ESCAPED, P_FUNCTION, P_START_ARG, P_START_OPT, P_END_ARG, P_END_OPT, P_TEXT]
@@ -100,9 +103,13 @@ class Parser(object):
         while self.current.name == 'Text':
             self.next()
             if self.current.name == 'Text':
-                result += self.data.name
-            # if newline
-            # if function
+                result += self.current.data
+            if self.current.name == 'Newline':
+                self.next()
+                if self.current.name == 'Text':
+                    result += self.current.data
+                else:
+                    return result
         self.next()
         return result
 
@@ -120,10 +127,15 @@ class Parser(object):
             self.next()
             if self.current.name == 'Text':
                 result.append(_parse_text(self))
+            if self.current.name == 'Function':
+                result.append(_parse_function(self))
         self.next()
         return result
 
-    def _parse_function_generic(self):
+    def _parse_function(self):
+        self.next()
+        if self.current.name != 'Text':
+            raise TeXError(E_SYNTAX.format(self.current.name, 'Text'))
         result = {'command' : self.data}
         argument_list = []
         self.next()
@@ -134,17 +146,6 @@ class Parser(object):
                 argument_list.append(_parse_arguments(self))
         if argument_list:
             result['arguments'] = argument_list
-        return result
-
-    def _parse_function(self):
-        self.next()
-        if self.current.name != 'Text':
-            raise TeXError(E_SYNTAX.format(self.current.name, 'Text'))
-        elif self.current.data == 'begin':
-            pass
-        elif self.current.data == 'item':
-            pass
-        else:
             result = _parse_function_generic(self)
         self.next()
         return result
