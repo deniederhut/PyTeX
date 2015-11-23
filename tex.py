@@ -12,6 +12,7 @@ FROM_TEX_SUB = {r'\\\\' : r'\n'}
 
 E_ENCODING = 'File not in valid TeX encoding'
 E_INPUT = 'Unrecognized input'
+E_SYNTAX = 'Unexpected {} where {} was expected'
 
 # Regular Expression Patterns
 regex = collections.namedtuple('regex', ['name', 'pattern'])
@@ -82,57 +83,61 @@ class Parser(object):
         self.current = None
 
     def next():
-        self.current = self.lexer.__next__()
+        item = self.lexer.__next__()
+        if item.name == 'Escaped':
+            self.current = Token(REV_ESC_MAP[item.data], 'Text')
+        else:
+            self.current = item
 
-    def _parse_arg():
-
-    def _parse_func():
-
-    def _parse_opt():
-        
-    def parse(self, state=1):
-        result = []
-        while state != 0:
-            self.next()
-            name = self.current.name
-            data = self.current.data
-            if state == 1:
-                if name == 'Text':
-                    try:
-                        result.append(' '.join([result.pop, data]))
-                    except IndexError:
-                        result.append(data)
-                elif name == 'Comment':
-                    result.append({name : data})
-                elif name == 'Function':
-                    result.append({name : self.parse(state=2))
-
-                elif name == 'Escaped':
-                elif name == 'Newline':
-                elif name == 'EOF':
-                    state = 0
-            if state == 2:
-                if name == 'Text':
-                    if data == 'begin':
-                    elif data == 'section':
-                    elif data == 'subsection':
-                    else:
-                        result.append({'command' : data})
-                elif name == 'StartOfOption':
-                    result[-1]['options'] = self.parse(state=3)
-                elif name == 'StartOfArgument':
-                    result[-1]
-            if state == 3:
-                if name == 'Text':
-                    result.append(data)
-                elif name == 'EndOfOption':
-                    return result
-            if state == 4:
-                if name == 'Text':
-                    result.append(data)
-                elif name == 'EndOfArgument':
-                    return result
+    def _parse_comment(self):
+        result =  {self.current.name : self.current.data}
+        self.next()
         return result
+
+    def _parse_text(self):
+        result = self.current.data
+        while self.current.name == 'Text':
+            self.next()
+            if self.current.name == 'Text':
+                result += self.data.name
+            # if newline
+            # if function
+        self.next()
+        return result
+
+    def _parse_option(self):
+        while self.current.name != 'EndofOption':
+            self.next()
+            if self.current.name == 'Text':
+                result = _parse_text(self)
+        self.next()
+        return {'Option' : result.split(', ')}
+
+    def _parse_argument(self):
+        result = []
+        while self.current.name != 'EndofArgument':
+            self.next()
+            if self.current.name == 'Text':
+                result.append(_parse_text(self))
+        self.next()
+        return result
+
+    def _parse_function(self):
+        pass
+
+    def _parse(self):
+        result = []
+        while self.current.name != 'EOF':
+            if self.current.name == 'Comment':
+                result.append(_parse_comment(self))
+            elif self.current.name == 'Text':
+                result.append(_parse_text(self))
+
+        return result
+
+    def parse(self):
+        self.next()
+        return _parse(self)
 
 def loads(f):
     return Parser(tokenize(FileIn(f))).parse()
