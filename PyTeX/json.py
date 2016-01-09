@@ -1,5 +1,5 @@
 import re
-import tex
+from PyTeX import tex
 
 def loads(f):
     return tex.Parser(tex.tokenize(tex.FileIn(f).read())).parse()

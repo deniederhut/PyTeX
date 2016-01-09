@@ -54,7 +54,7 @@ class FileIn(object):
     def __init__(self, f):
         self.data = f.read().strip()
         if f.encoding not in ['UTF-8', 'ASCII']:
-            raise TexError(E_ENCODING.format(f.encoding))
+            raise TeXError(E_ENCODING.format(f.encoding))
         for pattern, replacement in FROM_TEX_SUB.items():
             self.data = re.sub(pattern, replacement, self.data)
         self.newline_char = f.newlines
@@ -80,7 +80,7 @@ def tokenize(string):
                 string = string[match.end():]
                 yield Token(match.group(), item.name)
         if i == 0:
-            raise TexError(E_INPUT, string)
+            raise TeXError(E_INPUT)
     yield Token('', 'EOF')
 
 class Parser(object):
