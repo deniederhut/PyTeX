@@ -5,7 +5,7 @@ Author : Dillon Niederhut
 
 ## Description
 
-** In development **
+**In development**
 
 Easy-ish translation between data objects and the DOM we know as LaTeX.
 
