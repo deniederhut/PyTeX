@@ -5,7 +5,7 @@ from distutils.core import setup
 setup(
     name='PyTeX',
     version='0.0.1',
-    description='Compiler from LaTeX to data object',
+    description='LaTeX i/o for Python',
     long_description='',
     url='https://github.com/deniederhut/PyTeX',
     author='Dillon Niederhut',
