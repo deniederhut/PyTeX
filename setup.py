@@ -22,6 +22,7 @@ setup(
                 'collections',
                 're',
                 'types',
+                'fuzzywuzzy'
                 ],
     keywords='latex, tex, json, dom, object',
     packages=['PyTeX'],
