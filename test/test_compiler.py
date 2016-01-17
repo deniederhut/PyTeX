@@ -35,6 +35,6 @@ def test_Parser(f=simple):
 def test_compiler(f=simple):
     parser = tex.Parser(tex.tokenize(f().read()))
     assert parser.parse() == [
-    {'arguments': ['article'], 'command': 'documentclass'},
-    {'data': ['This is a LaTeX document.'], 'object': 'document'}
+    {'documentclass': {'arguments': ['article']}},
+    {'document': {'data': ['This is a LaTeX document.']}}
     ]
