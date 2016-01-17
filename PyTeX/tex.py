@@ -136,21 +136,22 @@ class Parser(object):
 
     def __parse_function__(self):
         command = re.search(r'\w+', self.current.data).group()
-        result = {'command' : command}
+        result = {}
         self.next()
         while self.current.name in ('StartOption', 'StartArgument'):
             if self.current.name == 'StartOption':
                 result['options'] = self.__parse_options__()
             elif self.current.name == 'StartArgument':
                 result['arguments'] = (self.__parse_arguments__())
-        return result
+        return {command : result}
 
     def __parse_math__(self):
         self.next()
-        return self.__recursive_parse__('Math')
+        return {'equation' : self.__recursive_parse__('Math')}
 
     def __parse_object__(self):
-        result = ({'object' : self.current.name.replace('Begin', '')})
+        result = {}
+        command = self.current.name.replace('Begin', '')
         condition = self.current.name.replace('Begin', 'End')
         self.next()
         if self.current.name == 'StartOption':
@@ -160,7 +161,7 @@ class Parser(object):
             self.next()
         else:
             raise TeXError(E_SYNTAX.format(self.current.name, condition))
-        return result
+        return {command : result}
 
     def __recursive_parse__(self, condition):
         result = []
