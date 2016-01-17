@@ -12,20 +12,24 @@ class Finder(object):
 
     def find(self, term, obj):
         if isinstance(obj, dict):
-            for item in obj.items():
-                if len(item[1]) <= 1:
-                    key_match = fuzz.ratio(term, item[0])
-                    val_match = fuzz.ratio(term, item[1])
+            for key, value in obj.items():
+                if isinstance(value, dict):
+                    if fuzz.ratio(term, key) > self.match_strength:
+                        self.results.append(obj)
+                    else:
+                        self.find(term, value)
+                else:
+                    key_match = fuzz.ratio(term, key)
+                    val_match = fuzz.ratio(term, value)
                     if key_match | val_match > self.match_strength:
                         self.results.append(obj)
-                elif isinstance(item[1][0], dict):
-                    self.find(term, item[1])
         elif isinstance(obj, list):
             for item in obj:
                 self.find(term, item)
         else:
             raise TypeError("Expected dict or list")
 
-def find(term, obj, match_strength=50):
+def find(term, obj, match_strength=75):
     search = Finder(match_strength)
-    return search.find(term, obj).results
+    search.find(term, obj)
+    return search.results
