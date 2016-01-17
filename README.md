@@ -21,8 +21,6 @@ pprint(data)
 ~~~
 
 ~~~{.output}
-[{'arguments': [['article']], 'command': 'documentclass'},
- {'arguments': [['document']], 'command': 'begin'},
- 'This is a LaTeX document.',
- {'arguments': [['document']], 'command': 'end'}]
+[{'arguments': ['article'], 'command': 'documentclass'},
+ {'data': ['This is a LaTeX document.'], 'object': 'document'}]
 ~~~
