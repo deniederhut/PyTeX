@@ -4,7 +4,7 @@ import types
 
 # Character Escaping
 
-ESC_MAP = {r'&' : r'\\&', r'%' : r'\\%', r'$' : r'\\$', r'#' : r'\\#', r'_' : r'\\_', r'{' : r'\\{', r'}' : r'\\{', r'~' : r'\\~', r'^' : r'\\^', r'<' : r'/<', r'>' : r'\>'}
+ESC_MAP = {r'&' : r'\\&', r'%' : r'\\%', r'$' : r'\\$', r'#' : r'\\#', r'_' : r'\\_', r'{' : r'\\{', r'}' : r'\\{', r'~' : r'\\~', r'^' : r'\\^', r'<' : r'\\<', r'>' : r'\\>'}
 REV_ESC_MAP = {value : key for key, value in ESC_MAP.items()}
 FROM_TEX_SUB = {r'\\\\' : r'\n'}
 
@@ -23,7 +23,7 @@ P_COMMENT = regex('Comment', re.compile(r'%.+\n', flags=re.I))
 P_END_ARG = regex('EndArgument', re.compile(r'\}'))
 P_END_GEN = regex('EndGeneric', re.compile(r'\\end\{\w+\}'))
 P_END_OPT = regex('EndOption', re.compile(r'\]'))
-P_ESCAPED = regex('Escaped', re.compile(r'\\' + '|'.join(REV_ESC_MAP.keys())))
+P_ESCAPED = regex('Escaped', re.compile(r'|'.join(REV_ESC_MAP.keys())))
 P_FUNCTION = regex('Function', re.compile(r'\\\w+'))
 # P_ITEM = regex('Item', re.compile(r'\\item'))
 P_MATH = regex('Math', re.compile(r'\$'))
@@ -96,7 +96,7 @@ class Parser(object):
     def next(self):
         item = self.lexer.__next__()
         if item.name == 'Escaped':
-            self.current = Token(REV_ESC_MAP[item.data], 'Text')
+            self.current = Token(REV_ESC_MAP['\\'+item.data], 'Text')
         else:
             self.current = item
 
