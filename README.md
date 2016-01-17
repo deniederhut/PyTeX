@@ -24,3 +24,11 @@ pprint(data)
 [{'arguments': ['article'], 'command': 'documentclass'},
  {'data': ['This is a LaTeX document.'], 'object': 'document'}]
 ~~~
+
+~~~{.input}
+json.find('data', data)
+~~~
+
+~~~{.output}
+[{'data': ['This is a LaTeX document.']}]
+~~~
