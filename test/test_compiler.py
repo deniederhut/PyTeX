@@ -2,14 +2,14 @@ import pytest
 from PyTeX import tex, json
 
 @pytest.fixture
-def file_in():
+def simple():
     with open('data/simple.tex') as f:
         return tex.FileIn(f)
 
-def test_FileIn(f=file_in):
+def test_FileIn(f=simple):
     assert f().read() == """\\documentclass{article}\n\n\\begin{document}\n\nThis is a LaTeX document.\n\n\\end{document}"""
 
-def test_Parser(f=file_in):
+def test_Parser(f=simple):
     token_list = []
     for token in tex.tokenize(f().read()):
         token_list.append(token.name)
@@ -32,7 +32,7 @@ def test_Parser(f=file_in):
                          'Enddocument',
                          'EOF']
 
-def test_compiler(f=file_in):
+def test_compiler(f=simple):
     parser = tex.Parser(tex.tokenize(f().read()))
     assert parser.parse() == [
     {'arguments': ['article'], 'command': 'documentclass'},

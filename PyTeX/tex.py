@@ -149,7 +149,7 @@ class Parser(object):
         self.next()
         return self.__recursive_parse__('Math')
 
-    def __parse_begin__(self):
+    def __parse_object__(self):
         result = ({'object' : self.current.name.replace('Begin', '')})
         condition = self.current.name.replace('Begin', 'End')
         self.next()
@@ -172,7 +172,7 @@ class Parser(object):
             elif self.current.name == 'Math':
                 result.append(self.__parse_math__())
             elif 'Begin' in self.current.name:
-                result.append(self.__parse_begin__())
+                result.append(self.__parse_object__())
             elif self.current.name == 'Function':
                 result.append(self.__parse_function__())
             elif self.current.name == 'Newline':
