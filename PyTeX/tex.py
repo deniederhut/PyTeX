@@ -137,15 +137,12 @@ class Parser(object):
     def __parse_function__(self):
         command = re.search(r'\w+', self.current.data).group()
         result = {'command' : command}
-        argument_list = []
         self.next()
         while self.current.name in ('StartOption', 'StartArgument'):
             if self.current.name == 'StartOption':
                 result['options'] = self.__parse_options__()
             elif self.current.name == 'StartArgument':
-                argument_list.append(self.__parse_arguments__())
-        if argument_list:
-            result['arguments'] = argument_list
+                result['arguments'] = (self.__parse_arguments__())
         return result
 
     def __parse_math__(self):
@@ -153,15 +150,12 @@ class Parser(object):
         return self.__recursive_parse__('Math')
 
     def __parse_begin__(self):
-        result = ({
-        'object' : self.current.name.replace('Begin', ''),
-        'data' : []
-        })
+        result = ({'object' : self.current.name.replace('Begin', '')})
         condition = self.current.name.replace('Begin', 'End')
         self.next()
         if self.current.name == 'StartOption':
             result['options'] = self.__parse_options__()
-        result['data'].append(self.__recursive_parse__(condition))
+        result['data'] = (self.__recursive_parse__(condition))
         if self.current.name == condition:
             self.next()
         else:
