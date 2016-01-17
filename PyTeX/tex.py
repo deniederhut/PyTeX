@@ -32,7 +32,7 @@ P_NEWLINE = regex('Newline', re.compile(r'\n|\\\\'))
 #P_SUBSECTION = regex('Subsection', re.compile(r'\\subsection'))
 P_START_ARG = regex('StartArgument', re.compile(r'\{'))
 P_START_OPT = regex('StartOption', re.compile(r'\['))
-P_TEXT = regex('Text', re.compile(r'[\w`\'\,\.\(\)=@\*\-]+', flags=re.I))
+P_TEXT = regex('Text', re.compile(r'[\w/`\'\,\.\(\)=@\*\-]+', flags=re.I))
 
 RE_LIST = [P_COMMENT, P_NEWLINE, P_MATH, P_ESCAPED, P_START_GEN, P_END_GEN, P_FUNCTION, P_START_ARG, P_START_OPT, P_END_ARG, P_END_OPT, P_TEXT]
 
