@@ -18,25 +18,23 @@ E_EOF = 'Unexpected end of {}'
 # Regular Expression Patterns
 regex = collections.namedtuple('regex', ['name', 'pattern'])
 
+P_START_GEN = regex('BeginGeneric', re.compile(r'\\begin\{\w+\}'))
 P_COMMENT = regex('Comment', re.compile(r'%.+\n', flags=re.I))
-P_END_ARG = regex('EndOfArgument', re.compile(r'\}'))
-P_END_EQ = regex('EndOfEquation', re.compile(r'\\end\{equation\}'))
-P_END_LI = regex('EndOfList', re.compile(r'\\end\{itemize\}'))
-P_END_OPT = regex('EndOfOption', re.compile(r'\]'))
+P_END_ARG = regex('EndArgument', re.compile(r'\}'))
+P_END_GEN = regex('EndGeneric', re.compile(r'\\end\{\w+\}'))
+P_END_OPT = regex('EndOption', re.compile(r'\]'))
 P_ESCAPED = regex('Escaped', re.compile(r'\\' + '|'.join(REV_ESC_MAP.keys())))
-P_FUNCTION = regex('Function', re.compile(r'\\'))
-P_ITEM = regex('Item', re.compile(r'\\item'))
+P_FUNCTION = regex('Function', re.compile(r'\\\w+'))
+# P_ITEM = regex('Item', re.compile(r'\\item'))
 P_MATH = regex('Math', re.compile(r'\$'))
 P_NEWLINE = regex('Newline', re.compile(r'\n|\\\\'))
-P_SECTION = regex('Section', re.compile(r'\\section'))
-P_SUBSECTION = regex('Subsection', re.compile(r'\\subsection'))
-P_START_ARG = regex('StartOfArgument', re.compile(r'\{'))
-P_START_EQ = regex('StartOfEquation', re.compile(r'\\begin\{equation\}'))
-P_START_LI = regex('StartOfList', re.compile(r'\\begin\{itemize\}'))
-P_START_OPT = regex('StartOfOption', re.compile(r'\['))
+#P_SECTION = regex('Section', re.compile(r'\\section'))
+#P_SUBSECTION = regex('Subsection', re.compile(r'\\subsection'))
+P_START_ARG = regex('StartArgument', re.compile(r'\{'))
+P_START_OPT = regex('StartOption', re.compile(r'\['))
 P_TEXT = regex('Text', re.compile(r'[\w`\'\,\.\(\)]+', flags=re.I))
 
-RE_LIST = [P_COMMENT, P_NEWLINE, P_MATH, P_ESCAPED, P_SECTION, P_SUBSECTION, P_START_EQ, P_START_LI, P_END_EQ, P_END_LI, P_ITEM, P_FUNCTION, P_START_ARG, P_START_OPT, P_END_ARG, P_END_OPT, P_TEXT]
+RE_LIST = [P_COMMENT, P_NEWLINE, P_MATH, P_ESCAPED, P_START_GEN, P_END_GEN, P_FUNCTION, P_START_ARG, P_START_OPT, P_END_ARG, P_END_OPT, P_TEXT]
 
 class TeXError(Exception):
 
@@ -78,7 +76,13 @@ def tokenize(string):
             if match:
                 i += 1
                 string = string[match.end():]
-                yield Token(match.group(), item.name)
+                if 'Generic' in item.name:
+                    p = re.compile(r'(?:\{)(\w+)(?:\})')
+                    container = re.search(p, match.group()).group(1)
+                    name = item.name.replace('Generic', container)
+                    yield Token(match.group(), name)
+                else:
+                    yield Token(match.group(), item.name)
         if i == 0:
             raise TeXError(E_INPUT)
     yield Token('', 'EOF')
@@ -116,7 +120,7 @@ class Parser(object):
         return result
 
     def __parse_options__(self):
-        while self.current.name != 'EndOfOption':
+        while self.current.name != 'EndOption':
             self.next()
             if self.current.name == 'Text':
                 result = self.__parse_text__()
@@ -124,26 +128,44 @@ class Parser(object):
         return result.split(',')
 
     def __parse_arguments__(self):
-        while self.current.name != 'EndOfArgument':
+        while self.current.name != 'EndArgument':
             self.next()
-            result = self.__recursive_parse__('EndOfArgument')
+            result = self.__recursive_parse__('EndArgument')
         self.next()
         return result
 
     def __parse_function__(self):
-        self.next()
-        if self.current.name != 'Text':
-            raise TeXError(E_SYNTAX.format(self.current.name, 'Text'))
-        result = {'command' : self.current.data}
+        command = re.search(r'\w+', self.current.data).group()
+        result = {'command' : command}
         argument_list = []
         self.next()
-        while self.current.name in ['StartOfOption', 'StartOfArgument']:
-            if self.current.name == 'StartOfOption':
+        while self.current.name in ('StartOption', 'StartArgument'):
+            if self.current.name == 'StartOption':
                 result['options'] = self.__parse_options__()
-            elif self.current.name == 'StartOfArgument':
+            elif self.current.name == 'StartArgument':
                 argument_list.append(self.__parse_arguments__())
         if argument_list:
             result['arguments'] = argument_list
+        return result
+
+    def __parse_math__(self):
+        self.next()
+        return self.__recursive_parse__('Math')
+
+    def __parse_begin__(self):
+        result = ({
+        'object' : self.current.name.replace('Begin', ''),
+        'data' : []
+        })
+        condition = self.current.name.replace('Begin', 'End')
+        self.next()
+        if self.current.name == 'StartOption':
+            result['options'] = self.__parse_options__()
+        result['data'].append(self.__recursive_parse__(condition))
+        if self.current.name == condition:
+            self.next()
+        else:
+            raise TeXError(E_SYNTAX.format(self.current.name, condition))
         return result
 
     def __recursive_parse__(self, condition):
@@ -153,17 +175,18 @@ class Parser(object):
                 result.append(self.__parse_comment__())
             elif self.current.name == 'Text':
                 result.append(self.__parse_text__())
+            elif self.current.name == 'Math':
+                result.append(self.__parse_math__())
             elif 'Begin' in self.current.name:
-                end_condition = self.current.name.replace('Begin','End')
-                result.append(self.__recursive_parse__(end_condition))
+                result.append(self.__parse_begin__())
             elif self.current.name == 'Function':
                 result.append(self.__parse_function__())
             elif self.current.name == 'Newline':
                 self.next()
-            elif self.current.name == condition:
+            elif self.current.name in condition:
                 break
             else:
-                raise TeXError(E_INPUT)
+                raise TeXError(E_SYNTAX.format(self.current.name, condition))
         return result
 
     def parse(self):
