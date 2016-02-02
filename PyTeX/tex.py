@@ -1,5 +1,5 @@
 import collections
-from PyTeX import error
+from PyTeX import error, utilities
 import re
 import types
 
@@ -44,14 +44,6 @@ class Parser(object):
         else:
             self.current = item
 
-    @staticmethod
-    def del_empty_keys(dictionary):
-        result = {}
-        for key in dictionary:
-            if dictionary[key]:
-                result[key] = dictionary[key]
-        return result
-
     def __parse_comment__(self):
         result = {self.current.name : self.current.data}
         self.next()
@@ -95,7 +87,7 @@ class Parser(object):
                 result['options'] += self.__parse_options__()
             elif self.current.name == 'StartArgument':
                 result['arguments'] += self.__parse_arguments__()
-        result = self.del_empty_keys(result)
+        result = utilities.del_empty_keys(result)
         return {command : result}
 
     def __parse_math__(self):
@@ -114,7 +106,7 @@ class Parser(object):
             self.next()
         else:
             raise error.TeXError(error.E_SYNTAX.format(self.current.name, condition))
-        result = self.del_empty_keys(result)
+        result = utilities.del_empty_keys(result)
         return {command : result}
 
     def __recursive_parse__(self, condition):
