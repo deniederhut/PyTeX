@@ -1,7 +1,6 @@
 import collections
 from PyTeX import error, utilities
 import re
-import types
 
 # Character Escaping
 
