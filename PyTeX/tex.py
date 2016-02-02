@@ -1,5 +1,5 @@
 import collections
-from PyTeX import error, tokenizer
+from PyTeX import error
 import re
 import types
 
