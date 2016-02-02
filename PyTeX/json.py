@@ -1,8 +1,16 @@
 from fuzzywuzzy import fuzz
-from PyTeX import tex
+from PyTeX import tex, bib
+import re
 
 def loads(f):
-    return tex.Parser(tex.tokenize(tex.FileIn(f).read())).parse()
+    P_BIB = re.compile(r'.+\.bib')
+    P_TEX = re.compile(r'.+\.tex')
+    if P_BIB.match(f.name):
+        pass
+    elif P_TEX.match(f.name):
+        return tex.Parser(tex.tokenize(tex.FileIn(f).read())).parse()
+    else:
+        raise OSError("File {} does not have a valid extension".format(f.name))
 
 class Finder(object):
 
