@@ -8,7 +8,7 @@ def loads(f):
     if P_BIB.match(f.name):
         pass
     elif P_TEX.match(f.name):
-        return tex.Parser(lexer.FileIn(f).tokenize()).parse()
+        return tex.Parser(lexer.FileIn(f, tex.TEX_SUB).tokenize()).parse()
     else:
         raise OSError("File {} does not have a valid extension".format(f.name))
 

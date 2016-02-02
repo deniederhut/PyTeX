@@ -8,11 +8,11 @@ class Token(object):
 
 class FileIn(object):
 
-    def __init__(self, f):
+    def __init__(self, f, substitute_dict):
         self.data = f.read().strip()
         if f.encoding not in ['UTF-8', 'ASCII']:
             raise error.TeXError(error.E_ENCODING.format(f.encoding))
-        for pattern, replacement in FROM_TEX_SUB.items():
+        for pattern, replacement in substitute_dict.items():
             self.data = re.sub(pattern, replacement, self.data)
         self.newline_char = f.newlines
         self.length = len(self.data)
