@@ -1,5 +1,5 @@
 import collections
-from PyTeX import error
+from PyTeX import error, tokenizer
 import re
 import types
 
@@ -28,53 +28,8 @@ P_START_ARG = regex('StartArgument', re.compile(r'\{'))
 P_START_OPT = regex('StartOption', re.compile(r'\['))
 P_TEXT = regex('Text', re.compile(r'[\w/`\'\,\.\(\)=@\*\-]+', flags=re.I))
 
-RE_LIST = [P_COMMENT, P_NEWLINE, P_MATH, P_ESCAPED, P_START_GEN, P_END_GEN, P_FUNCTION, P_START_ARG, P_START_OPT, P_END_ARG, P_END_OPT, P_TEXT]
+REGEX_LIST = [P_COMMENT, P_NEWLINE, P_MATH, P_ESCAPED, P_START_GEN, P_END_GEN, P_FUNCTION, P_START_ARG, P_START_OPT, P_END_ARG, P_END_OPT, P_TEXT]
 
-class Token(object):
-
-    def __init__(self, string, name):
-        self.data = string
-        self.name = name
-
-class FileIn(object):
-
-    def __init__(self, f):
-        self.data = f.read().strip()
-        if f.encoding not in ['UTF-8', 'ASCII']:
-            raise error.TeXError(error.E_ENCODING.format(f.encoding))
-        for pattern, replacement in FROM_TEX_SUB.items():
-            self.data = re.sub(pattern, replacement, self.data)
-        self.newline_char = f.newlines
-        self.length = len(self.data)
-
-    def read(self):
-        return self.data
-
-    def read_lines(self):
-        for line in self.data.split(newline_char):
-            yield line
-
-def tokenize(string, RE_LIST):
-    skip_list = [' ']
-    while string:
-        while string[0] in skip_list:
-            string = string[1:]
-        i = 0
-        for item in RE_LIST:
-            match = re.match(item.pattern, string)
-            if match:
-                i += 1
-                string = string[match.end():]
-                if 'Generic' in item.name:
-                    p = re.compile(r'(?:\{)(\w+)(?:\})')
-                    container = re.search(p, match.group()).group(1)
-                    name = item.name.replace('Generic', container)
-                    yield Token(match.group(), name)
-                else:
-                    yield Token(match.group(), item.name)
-        if i == 0:
-            raise error.TeXError(error.E_INPUT)
-    yield Token('', 'EOF')
 
 class Parser(object):
 
