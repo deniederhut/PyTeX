@@ -1,4 +1,5 @@
 import collections
+from PyTeX import error
 import re
 import types
 
@@ -7,13 +8,6 @@ import types
 ESC_MAP = {r'&' : r'\\&', r'%' : r'\\%', r'$' : r'\\$', r'#' : r'\\#', r'_' : r'\\_', r'{' : r'\\{', r'}' : r'\\{', r'~' : r'\\~', r'^' : r'\\^', r'<' : r'\\<', r'>' : r'\\>'}
 REV_ESC_MAP = {value : key for key, value in ESC_MAP.items()}
 FROM_TEX_SUB = {r'\\\\' : r'\n'}
-
-# Error Messages
-
-E_ENCODING = 'File in unexpected coding: {}'
-E_INPUT = 'Unrecognized input'
-E_SYNTAX = '{} where {} was expected'
-E_EOF = 'Unexpected end of {}'
 
 # Regular Expression Patterns
 regex = collections.namedtuple('regex', ['name', 'pattern'])
@@ -36,11 +30,6 @@ P_TEXT = regex('Text', re.compile(r'[\w/`\'\,\.\(\)=@\*\-]+', flags=re.I))
 
 RE_LIST = [P_COMMENT, P_NEWLINE, P_MATH, P_ESCAPED, P_START_GEN, P_END_GEN, P_FUNCTION, P_START_ARG, P_START_OPT, P_END_ARG, P_END_OPT, P_TEXT]
 
-class TeXError(Exception):
-
-    def __init__(self, msg):
-        Exception.__init__(self, msg)
-
 class Token(object):
 
     def __init__(self, string, name):
@@ -52,7 +41,7 @@ class FileIn(object):
     def __init__(self, f):
         self.data = f.read().strip()
         if f.encoding not in ['UTF-8', 'ASCII']:
-            raise TeXError(E_ENCODING.format(f.encoding))
+            raise error.TeXError(error.E_ENCODING.format(f.encoding))
         for pattern, replacement in FROM_TEX_SUB.items():
             self.data = re.sub(pattern, replacement, self.data)
         self.newline_char = f.newlines
@@ -65,7 +54,7 @@ class FileIn(object):
         for line in self.data.split(newline_char):
             yield line
 
-def tokenize(string):
+def tokenize(string, RE_LIST):
     skip_list = [' ']
     while string:
         while string[0] in skip_list:
@@ -84,7 +73,7 @@ def tokenize(string):
                 else:
                     yield Token(match.group(), item.name)
         if i == 0:
-            raise TeXError(E_INPUT)
+            raise error.TeXError(error.E_INPUT)
     yield Token('', 'EOF')
 
 class Parser(object):
@@ -169,7 +158,7 @@ class Parser(object):
         if self.current.name == condition:
             self.next()
         else:
-            raise TeXError(E_SYNTAX.format(self.current.name, condition))
+            raise error.TeXError(error.E_SYNTAX.format(self.current.name, condition))
         result = self.del_empty_keys(result)
         return {command : result}
 
@@ -191,7 +180,7 @@ class Parser(object):
             elif self.current.name in condition:
                 break
             else:
-                raise TeXError(E_SYNTAX.format(self.current.name, condition))
+                raise error.TeXError(error.E_SYNTAX.format(self.current.name, condition))
         return result
 
     def parse(self):
