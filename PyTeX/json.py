@@ -1,5 +1,5 @@
 from fuzzywuzzy import fuzz
-from PyTeX import tex, bib
+from PyTeX import bib, lexer, tex
 import re
 
 def loads(f):
@@ -8,7 +8,7 @@ def loads(f):
     if P_BIB.match(f.name):
         pass
     elif P_TEX.match(f.name):
-        return tex.Parser(tex.tokenize(tex.FileIn(f).read())).parse()
+        return tex.Parser(lexer.FileIn(f).tokenize()).parse()
     else:
         raise OSError("File {} does not have a valid extension".format(f.name))
 
