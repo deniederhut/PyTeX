@@ -6,7 +6,7 @@ import re
 
 ESC_MAP = {r'&' : r'\\&', r'%' : r'\\%', r'$' : r'\\$', r'#' : r'\\#', r'_' : r'\\_', r'{' : r'\\{', r'}' : r'\\{', r'~' : r'\\~', r'^' : r'\\^', r'<' : r'\\<', r'>' : r'\\>'}
 REV_ESC_MAP = {value : key for key, value in ESC_MAP.items()}
-TEX_SUB = {r'\\\\' : r'\n'}
+SUB_DICT = {r'\\\\' : r'\n'}
 
 # Regular Expression Patterns
 regex = collections.namedtuple('regex', ['name', 'pattern'])
