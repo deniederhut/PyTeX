@@ -39,12 +39,12 @@ def test_Parser(f=simple):
 
 def test_compiler(f=simple):
     parser = bib.Parser(f().tokenize(bib.REGEX_LIST))
-    assert parser.parse() == [
-        {
-        'article' : {
-            'author' : 'Dillon Niederhut',
-            'title' : 'Structured data with PyTeX',
-            'year' : 2016
-            }
+    assert parser.parse() == {
+    'test' : {
+        'author' : 'Dillon Niederhut',
+        'name' : 'test'
+        'title' : 'Structured data with PyTeX',
+        'type' : 'article'
+        'year' : 2016
         }
-    ]
+    }
