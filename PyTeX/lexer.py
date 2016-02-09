@@ -1,4 +1,5 @@
 from PyTeX import error
+import re
 
 class Token(object):
 
