@@ -22,7 +22,7 @@ P_DQUOTE = regex('DoubleQuote', re.compile(r'"'))
 P_START = regex('Start', re.compile(r'\{'))
 P_TEXT = regex('Text', re.compile(r"[\w/`\'\:\.\(\)=@\*\-]+", flags=re.I))
 
-REGEX_LIST = []
+REGEX_LIST = [P_ASSIGN, P_END, P_ITEM, P_NEXT, P_NUMBER, P_QUOTE, P_DQUOTE, P_START, P_TEXT]
 
 class Parser(object):
 
@@ -53,7 +53,7 @@ class Parser(object):
             self.__parse_text__()
             result.append(self.next())
         if self.current.name != condition:
-            raise error.TeXError(E_SYNTAX.format(self.current.name, condition)
+            raise error.TeXError(E_SYNTAX.format(self.current.name, condition))
         self.next()
         return ' '.join(result)
 
@@ -62,9 +62,9 @@ class Parser(object):
             key = self.current.data
             self.next()
             if self.current.name != 'Assign':
-                raise error.TeXError(E_SYNTAX.format(self.current.data, '=')
+                raise error.TeXError(E_SYNTAX.format(self.current.data, '='))
             self.next()
-            if self.current.name == 'Number'
+            if self.current.name == 'Number':
                 return key, self.current.data
             elif self.current.name == 'Text':
                 return key, self.__parse_text__()
@@ -79,20 +79,20 @@ class Parser(object):
                 item = {'type' : self.current.data.replace('@','')}
                 self.next()
                 if self.current.name != 'Start':
-                    raise error.TeXError(E_SYNTAX.format(self.current.data, '{')
+                    raise error.TeXError(E_SYNTAX.format(self.current.data, '{'))
                 self.next()
                 if self.current.name != 'Text':
-                    raise error.TeXError(E_SYNTAX.format(self.current.data, 'text')
+                    raise error.TeXError(E_SYNTAX.format(self.current.data, 'text'))
                 item['label'] = self.__parse_text__()
                 self.next()
                 if self.current.name != 'Next':
-                    raise error.TeXError(E_SYNTAX.format(self.current.data, ',')
+                    raise error.TeXError(E_SYNTAX.format(self.current.data, ','))
                 self.next()
                 for key, value in self.__parse_assignments__():
                     item[key] = value
                 self.next()
             else:
-                raise error.TeXError(E_SYNTAX.format(self.current.data, condition)
+                raise error.TeXError(E_SYNTAX.format(self.current.data, condition))
         return result
 
     def parse(self):
