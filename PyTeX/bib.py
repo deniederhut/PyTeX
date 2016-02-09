@@ -6,7 +6,7 @@ import re
 
 ESC_MAP = {r'@' : r'\\@'}
 REV_ESC_MAP = {value : key for key, value in ESC_MAP.items()}
-SUB_DICT = {'\n', ' '}
+SUB_DICT = {'\n' : ' '}
 
 # Regular Expression Patterns
 
@@ -53,7 +53,7 @@ class Parser(object):
             self.__parse_text__()
             result.append(self.next())
         if self.current.name != condition:
-            raise error.TeXError(E_SYNTAX.format(self.current.name, condition))
+            raise error.TeXError(error.SYNTAX.format(self.current.name, condition))
         self.next()
         return ' '.join(result)
 
@@ -62,7 +62,7 @@ class Parser(object):
             key = self.current.data
             self.next()
             if self.current.name != 'Assign':
-                raise error.TeXError(E_SYNTAX.format(self.current.data, '='))
+                raise error.TeXError(error.SYNTAX.format(self.current.data, '='))
             self.next()
             if self.current.name == 'Number':
                 return key, self.current.data
@@ -79,20 +79,20 @@ class Parser(object):
                 item = {'type' : self.current.data.replace('@','')}
                 self.next()
                 if self.current.name != 'Start':
-                    raise error.TeXError(E_SYNTAX.format(self.current.data, '{'))
+                    raise error.TeXError(error.SYNTAX.format(self.current.data, '{'))
                 self.next()
                 if self.current.name != 'Text':
-                    raise error.TeXError(E_SYNTAX.format(self.current.data, 'text'))
+                    raise error.TeXError(error.SYNTAX.format(self.current.data, 'text'))
                 item['label'] = self.__parse_text__()
                 self.next()
                 if self.current.name != 'Next':
-                    raise error.TeXError(E_SYNTAX.format(self.current.data, ','))
+                    raise error.TeXError(error.SYNTAX.format(self.current.data, ','))
                 self.next()
                 for key, value in self.__parse_assignments__():
                     item[key] = value
                 self.next()
             else:
-                raise error.TeXError(E_SYNTAX.format(self.current.data, condition))
+                raise error.TeXError(error.SYNTAX.format(self.current.data, condition))
         return result
 
     def parse(self):
