@@ -6,7 +6,7 @@ def loads(f):
     P_BIB = re.compile(r'.+\.bib')
     P_TEX = re.compile(r'.+\.tex')
     if P_BIB.match(f.name):
-        return tex.Parser(lexer.FileIn(f, bib.SUB_DICT).tokenize(bib.REGEX_LIST)).parse()
+        return bib.Parser(lexer.FileIn(f, bib.SUB_DICT).tokenize(bib.REGEX_LIST)).parse()
     elif P_TEX.match(f.name):
         return tex.Parser(lexer.FileIn(f, tex.SUB_DICT).tokenize(tex.REGEX_LIST)).parse()
     else:
