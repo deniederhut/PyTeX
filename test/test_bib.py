@@ -14,27 +14,31 @@ def test_Parser(f=simple):
     for token in f().tokenize(bib.REGEX_LIST):
         token_list.append(token.name)
     assert token_list == [
-    'Item',
-    'Start',
-    'Text',
-    'Next',
-    'Text',
-    'Assign',
-    'Start',
-    'Text',
-    'End',
-    'Next',
-    'Text',
-    'Assign',
-    'Start',
-    'Text',
-    'End',
-    'Next',
-    'Text',
-    'Assign',
-    'Number'
-    'End',
-    'EOF'
+        'Item',
+        'Start',
+        'Text',
+        'Next',
+        'Text',
+        'Assign',
+        'Start',
+        'Text',
+        'Text',
+        'End',
+        'Next',
+        'Text',
+        'Assign',
+        'Start',
+        'Text',
+        'Text',
+        'Text',
+        'Text',
+        'End',
+        'Next',
+        'Text',
+        'Assign',
+        'Number',
+        'End',
+        'EOF'
     ]
 
 def test_compiler(f=simple):
@@ -42,9 +46,8 @@ def test_compiler(f=simple):
     assert parser.parse() == {
     'test' : {
         'author' : 'Dillon Niederhut',
-        'name' : 'test'
         'title' : 'Structured data with PyTeX',
-        'type' : 'article'
-        'year' : 2016
+        'type' : 'article',
+        'year' : '2016'
         }
     }
