@@ -11,7 +11,7 @@ Easy-ish translation between data objects and the DOM we know as LaTeX.
 
 ## Usage
 
-Compiling a .tex document to a json object:
+#### Compiling a .tex document to a json object:
 
 ~~~{.input}
 from pprint import pprint
@@ -27,7 +27,25 @@ pprint(data)
  {'data': ['This is a LaTeX document.'], 'object': 'document'}]
 ~~~
 
-Recursive, fuzzy searching of a json object:
+#### Compiling a .bib document to a json object
+
+~~~{.input}
+from pprint import pprint
+from PyTeX import json
+
+with open('data/simple.bib', 'r') as f:
+    data = json.loads(f)
+pprint(data)
+~~~
+
+~~~{.output}
+{'test': {'author': 'Dillon Niederhut',
+          'title': 'Structured data with PyTeX',
+          'type': 'article',
+          'year': '2016'}}
+~~~
+
+#### Recursive, fuzzy searching of a json object:
 
 ~~~{.input}
 for result in json.find('data', data):
