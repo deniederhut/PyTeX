@@ -50,27 +50,31 @@ class Parser(object):
         result = []
         self.next()
         while self.current.name != condition:
-            self.__parse_text__()
-            result.append(self.next())
+            result.append(self.current.data)
+            self.next()
         if self.current.name != condition:
             raise error.TeXError(error.SYNTAX.format(self.current.name, condition))
         self.next()
         return ' '.join(result)
 
     def __parse_assignments__(self):
+        result = {}
         while self.current.name != 'End':
+            if self.current.name == 'Next':
+                self.next()
             key = self.current.data
             self.next()
             if self.current.name != 'Assign':
                 raise error.TeXError(error.SYNTAX.format(self.current.data, '='))
             self.next()
             if self.current.name == 'Number':
-                return key, self.current.data
-            elif self.current.name == 'Text':
-                return key, self.__parse_text__()
-            elif self.current.name in ('Quote', 'DoubleQuote', 'Start'):
-                return key, self.__parse_object__(condition=self.current.name)
-        self.next()
+                result[key] = self.current.data
+                self.next()
+            elif self.current.name == 'Start':
+                result[key] = self.__parse_object__(condition='End')
+            elif self.current.name in ('Quote', 'DoubleQuote'):
+                result[key] = self.__parse_object__(condition=self.current.name)
+        return result
 
     def __parse_items__(self):
         result = []
@@ -83,12 +87,12 @@ class Parser(object):
                 self.next()
                 if self.current.name != 'Text':
                     raise error.TeXError(error.SYNTAX.format(self.current.data, 'text'))
-                item['label'] = self.__parse_text__()
+                item['label'] = self.current.data
                 self.next()
                 if self.current.name != 'Next':
                     raise error.TeXError(error.SYNTAX.format(self.current.data, ','))
                 self.next()
-                for key, value in self.__parse_assignments__():
+                for key, value in self.__parse_assignments__().items():
                     item[key] = value
                 self.next()
             else:
