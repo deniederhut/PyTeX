@@ -20,7 +20,7 @@ P_NUMBER = regex('Number', re.compile(r'[0-9]+'))
 P_QUOTE = regex('Quote', re.compile(r"'"))
 P_DQUOTE = regex('DoubleQuote', re.compile(r'"'))
 P_START = regex('Start', re.compile(r'\{'))
-P_TEXT = regex('Text', re.compile(r"[\w/`\'\:\.\(\)=@\*\-]+", flags=re.I))
+P_TEXT = regex('Text', re.compile(r"[\w/`\'\:\.\(\)@\*\-]+", flags=re.I))
 
 REGEX_LIST = [P_ASSIGN, P_END, P_ITEM, P_NEXT, P_NUMBER, P_QUOTE, P_DQUOTE, P_START, P_TEXT]
 
