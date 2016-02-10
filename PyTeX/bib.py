@@ -77,7 +77,7 @@ class Parser(object):
         return result
 
     def __parse_items__(self):
-        result = []
+        result = {}
         while self.current.name != 'EOF':
             if self.current.name == 'Item':
                 item = {'type' : self.current.data.replace('@','')}
@@ -87,7 +87,7 @@ class Parser(object):
                 self.next()
                 if self.current.name != 'Text':
                     raise error.TeXError(error.SYNTAX.format(self.current.data, 'text'))
-                item['label'] = self.current.data
+                label = self.current.data
                 self.next()
                 if self.current.name != 'Next':
                     raise error.TeXError(error.SYNTAX.format(self.current.data, ','))
@@ -97,6 +97,7 @@ class Parser(object):
                 self.next()
             else:
                 raise error.TeXError(error.SYNTAX.format(self.current.data, condition))
+            result[label] = item
         return result
 
     def parse(self):
