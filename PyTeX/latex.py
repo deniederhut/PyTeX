@@ -2,7 +2,7 @@ from fuzzywuzzy import fuzz
 from PyTeX import bib, lexer, tex
 import re
 
-def loads(f):
+def load(f):
     P_BIB = re.compile(r'.+\.bib')
     P_TEX = re.compile(r'.+\.tex')
     if P_BIB.match(f.name):

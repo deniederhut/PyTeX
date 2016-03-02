@@ -1,5 +1,5 @@
 import pytest
-from PyTeX import json, lexer, tex
+from PyTeX import latex, lexer, tex
 
 @pytest.fixture
 def simple():

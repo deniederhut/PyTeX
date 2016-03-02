@@ -17,10 +17,10 @@ Easy-ish translation between data objects and the DOM we know as LaTeX.
 
 ~~~{.input}
 from pprint import pprint
-from PyTeX import json
+from PyTeX import latex
 
 with open('data/simple.tex', 'r') as f:
-    data = json.loads(f)
+    data = latex.load(f)
 pprint(data)
 ~~~
 
@@ -33,10 +33,10 @@ pprint(data)
 
 ~~~{.input}
 from pprint import pprint
-from PyTeX import json
+from PyTeX import latex
 
 with open('data/simple.bib', 'r') as f:
-    data = json.loads(f)
+    data = latex.load(f)
 pprint(data)
 ~~~
 
@@ -50,7 +50,7 @@ pprint(data)
 #### Recursive, fuzzy searching of a json object:
 
 ~~~{.input}
-for result in json.find('data', data):
+for result in latex.find('data', data):
     pprint(result)
 ~~~
 
