@@ -3,7 +3,7 @@ Title : PyTeX -- LaTeX i/o for Python
 Author : Dillon Niederhut
 ---
 
-[![Build Status](https://travis-ci.org/deniederhut/PyTeX.svg?branch=master)](https://travis-ci.org/deniederhut/PyTeX)
+[![DOI](https://zenodo.org/badge/18094/deniederhut/PyTeX.svg)](https://zenodo.org/badge/latestdoi/18094/deniederhut/PyTeX)  [![Build Status](https://travis-ci.org/deniederhut/PyTeX.svg?branch=master)](https://travis-ci.org/deniederhut/PyTeX)
 
 ## Description
 
