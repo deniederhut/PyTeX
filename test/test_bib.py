@@ -3,7 +3,7 @@ from PyTeX import latex, lexer, bib
 
 @pytest.fixture
 def simple():
-    with open('data/simple.bib') as f:
+    with open('test/data/simple.bib') as f:
         return lexer.FileIn(f, bib.SUB_DICT)
 
 def test_FileIn(f=simple):
