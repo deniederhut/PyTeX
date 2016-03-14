@@ -1,9 +1,22 @@
 language : python
-sudo : false
 cache : false
-python :
-    - "3.4"
-    - "3.5"
+
+matrix :
+    include :
+        - os : linux
+          dist : precise
+          python : 3.4
+        - os : linux
+          dist : trusty
+          sudo : required
+          python : 3.4
+        - os : linux
+          dist : precise
+          python : 3.5
+        - os : linux
+          dist : trusty
+          sudo : required
+          python : 3.5
 
 install :
     - pip install .
