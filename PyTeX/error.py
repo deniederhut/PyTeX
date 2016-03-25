@@ -1,3 +1,5 @@
+#!/bin/env python
+
 # Error Messages
 
 ENCODING = 'File in unexpected coding: {}'

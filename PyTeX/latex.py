@@ -1,3 +1,5 @@
+#!/bin/env python
+
 from fuzzywuzzy import fuzz
 from PyTeX import bib, lexer, tex
 import re

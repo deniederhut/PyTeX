@@ -1,3 +1,5 @@
+#!/bin/env python
+
 import collections
 from PyTeX import error, utilities
 import re

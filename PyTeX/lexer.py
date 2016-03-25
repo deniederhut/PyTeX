@@ -1,3 +1,5 @@
+#!/bin/env python
+
 from PyTeX import error
 import re
 
