@@ -15,6 +15,7 @@ setup(
         'Development Status :: 2 - Pre-Alpha',
         'Intended Audience :: Science/Research',
         'License :: OSI Approved :: BSD License',
+        'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
     ],
@@ -27,6 +28,7 @@ setup(
     keywords='latex, tex, json, dom, object',
     packages=['PyTeX'],
     package_data={
-    'PyTeX' : ['data/*',]
+    'PyTeX' : ['data/*',],
+    'test' : ['test/data/*']
     }
 )
