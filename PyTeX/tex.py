@@ -1,5 +1,7 @@
 #!/bin/env python
 
+from __future__ import absolute_import
+
 import collections
 from PyTeX import error, utilities
 import re

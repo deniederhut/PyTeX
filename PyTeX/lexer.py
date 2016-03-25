@@ -1,5 +1,7 @@
 #!/bin/env python
 
+from __future__ import absolute_import
+
 from PyTeX import error
 import re
 
@@ -13,8 +15,9 @@ class FileIn(object):
 
     def __init__(self, f, substitute_dict):
         self.data = f.read().strip()
-        if f.encoding not in ['UTF-8', 'ASCII']:
-            raise error.TeXError(error.E_ENCODING.format(f.encoding))
+        if f.encoding:
+            if f.encoding not in ['UTF-8', 'ASCII']:
+                raise error.TeXError(error.ENCODING.format(f.encoding))
         for pattern, replacement in substitute_dict.items():
             self.data = re.sub(pattern, replacement, self.data)
         self.newline_char = f.newlines

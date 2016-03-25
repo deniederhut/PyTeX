@@ -1,5 +1,7 @@
 #!/bin/env python
 
+from __future__ import absolute_import
+
 import collections
 from PyTeX import error
 import re
@@ -33,7 +35,7 @@ class Parser(object):
         self.current = None
 
     def next(self):
-        item = self.lexer.__next__()
+        item = self.lexer.next()
         if item.name == 'Escaped':
             self.current = Token(REV_ESC_MAP['\\'+item.data], 'Text')
         else:
