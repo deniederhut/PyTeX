@@ -41,7 +41,7 @@ class Parser(object):
         self.current = None
 
     def next(self):
-        item = self.lexer.__next__()
+        item = next(self.lexer)
         if item.name == 'Escaped':
             self.current = Token(REV_ESC_MAP['\\'+item.data], 'Text')
         else:
