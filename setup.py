@@ -29,6 +29,6 @@ setup(
     packages=['PyTeX'],
     package_data={
     'PyTeX' : ['data/*',],
-    'test' : ['test/data/*']
+    'test' : ['data/*']
     }
 )

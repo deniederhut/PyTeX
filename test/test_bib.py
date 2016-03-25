@@ -1,9 +1,10 @@
+from pkg_resources import resource_filename
 import pytest
 from PyTeX import latex, lexer, bib
 
 @pytest.fixture
 def simple():
-    with open('test/data/simple.bib') as f:
+    with open(resource_filename('test', 'data/simple.bib')) as f:
         return lexer.FileIn(f, bib.SUB_DICT)
 
 def test_FileIn(f=simple):
