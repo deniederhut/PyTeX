@@ -25,8 +25,8 @@ pprint(data)
 ~~~
 
 ~~~{.output}
-[{'arguments': ['article'], 'command': 'documentclass'},
- {'data': ['This is a LaTeX document.'], 'object': 'document'}]
+[{'documentclass': {'arguments': ['article']}},
+ {'document': {'data': ['This is a LaTeX document.']}}]
 ~~~
 
 #### Compiling a .bib document to a json object
