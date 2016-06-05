@@ -4,6 +4,7 @@ from __future__ import absolute_import
 
 import collections
 from PyTeX import error, utilities
+from PyTeX.lexer import Token
 import re
 
 # Character Escaping
@@ -22,6 +23,7 @@ P_END_GEN = regex('EndGeneric', re.compile(r'\\end\{\w+\}'))
 P_END_OPT = regex('EndOption', re.compile(r'\]'))
 P_ESCAPED = regex('Escaped', re.compile(r'|'.join(REV_ESC_MAP.keys())))
 P_FUNCTION = regex('Function', re.compile(r'\\\w+'))
+P_INV_FUNCTION = regex('InverseFunction', re.compile(r'\{\s*?\\em[a-z0-9\s\.]+?\}'))
 # P_ITEM = regex('Item', re.compile(r'\\item'))
 P_MATH = regex('Math', re.compile(r'\$'))
 P_NEWLINE = regex('Newline', re.compile(r'\n|\\\\'))
@@ -29,9 +31,9 @@ P_SECTION = regex('Section', re.compile(r'\\section'))
 P_SUBSECTION = regex('Subsection', re.compile(r'\\subsection'))
 P_START_ARG = regex('StartArgument', re.compile(r'\{'))
 P_START_OPT = regex('StartOption', re.compile(r'\['))
-P_TEXT = regex('Text', re.compile(r'[\w/:`\'\,\.\(\)=@\*\-]+', flags=re.I))
+P_TEXT = regex('Text', re.compile(r'[\w/:~+`\'\,\.\(\)=&@\*\-]+', flags=re.I))
 
-REGEX_LIST = [P_COMMENT, P_NEWLINE, P_SECTION, P_SUBSECTION, P_MATH, P_ESCAPED, P_START_GEN, P_END_GEN, P_FUNCTION, P_START_ARG, P_START_OPT, P_END_ARG, P_END_OPT, P_TEXT]
+REGEX_LIST = [P_COMMENT, P_NEWLINE, P_SECTION, P_SUBSECTION, P_MATH, P_ESCAPED, P_INV_FUNCTION, P_START_GEN, P_END_GEN, P_FUNCTION, P_START_ARG, P_START_OPT, P_END_ARG, P_END_OPT, P_TEXT]
 
 
 class Parser(object):
@@ -67,7 +69,7 @@ class Parser(object):
         return result
 
     def __parse_options__(self):
-        while self.current.name != 'EndOption':
+        while self.current.name not in ['EndOption']:
             self.next()
             if self.current.name == 'Text':
                 result = self.__parse_text__()
@@ -75,7 +77,7 @@ class Parser(object):
         return result.split(',')
 
     def __parse_arguments__(self):
-        while self.current.name != 'EndArgument':
+        while self.current.name not in ['EndArgument']:
             self.next()
             result = self.__recursive_parse__(['EndArgument'])
         self.next()
@@ -85,12 +87,19 @@ class Parser(object):
         command = re.search(r'\w+', self.current.data).group()
         result = {'arguments' : [], 'options' : []}
         self.next()
-        while self.current.name in ('StartOption', 'StartArgument'):
+        while self.current.name in ['StartOption', 'StartArgument']:
             if self.current.name == 'StartOption':
                 result['options'] += self.__parse_options__()
             elif self.current.name == 'StartArgument':
                 result['arguments'] += self.__parse_arguments__()
         result = utilities.del_empty_keys(result)
+        return {command : result}
+
+    def __parse_inverse__(self):
+        match = re.search(r'(?:\{)(?P<command>\\\w+)(?P<data>[a-z0-9\.\s]+?)(?:\})', self.current.data)
+        command = match.group('command')
+        result = {'arguments' : match.group('data')}
+        self.next()
         return {command : result}
 
     def __parse_math__(self):
@@ -136,6 +145,8 @@ class Parser(object):
                 result.append(self.__parse_math__())
             elif 'Begin' in self.current.name:
                 result.append(self.__parse_object__())
+            elif self.current.name == 'InverseFunction':
+                result.append(self.__parse_inverse__())
             elif self.current.name == 'Function':
                 result.append(self.__parse_function__())
             elif self.current.name == 'Newline':
