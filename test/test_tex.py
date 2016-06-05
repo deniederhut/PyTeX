@@ -44,7 +44,7 @@ def test_standard_Parser(f=standard):
         token_list.append(token.name)
     assert 'Beginequation' in token_list
     assert 'Section' in token_list
-    assert len(token_list) > 1500
+    assert len(token_list) >= 1500
 
 def test_compiler(f=simple):
     parser = tex.Parser(f().tokenize(tex.REGEX_LIST))
