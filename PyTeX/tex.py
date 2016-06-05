@@ -22,12 +22,12 @@ P_END_ARG = regex('EndArgument', re.compile(r'\}'))
 P_END_GEN = regex('EndGeneric', re.compile(r'\\end\{\w+\}'))
 P_END_OPT = regex('EndOption', re.compile(r'\]'))
 P_ESCAPED = regex('Escaped', re.compile(r'|'.join(REV_ESC_MAP.keys())))
-P_FUNCTION = regex('Function', re.compile(r'\\\w+'))
+P_FUNCTION = regex('Function', re.compile(r'\\[\w\*]+'))
 P_INV_FUNCTION = regex('InverseFunction', re.compile(r'\{\s*?\\em[a-z0-9\s\.]+?\}'))
 # P_ITEM = regex('Item', re.compile(r'\\item'))
 P_MATH = regex('Math', re.compile(r'\$'))
 P_NEWLINE = regex('Newline', re.compile(r'\n|\\\\'))
-P_SECTION = regex('Section', re.compile(r'\\section'))
+P_SECTION = regex('Section', re.compile(r'\\section\*?'))
 P_SUBSECTION = regex('Subsection', re.compile(r'\\subsection'))
 P_START_ARG = regex('StartArgument', re.compile(r'\{'))
 P_START_OPT = regex('StartOption', re.compile(r'\['))
@@ -104,7 +104,9 @@ class Parser(object):
 
     def __parse_math__(self):
         self.next()
-        return {'equation' : self.__recursive_parse__(['Math'])}
+        result = {'equation' : self.__recursive_parse__(['Math'])}
+        self.next()
+        return result
 
     def __parse_object__(self):
         result = {'options':[]}
@@ -149,10 +151,10 @@ class Parser(object):
                 result.append(self.__parse_inverse__())
             elif self.current.name == 'Function':
                 result.append(self.__parse_function__())
+            elif self.current.name == 'StartArgument':
+                result.append(self.__parse_arguments__())
             elif self.current.name == 'Newline':
                 self.next()
-            elif self.current.name in condition:
-                break
             else:
                 raise error.TeXError(error.SYNTAX.format(self.current.name, condition))
         return result
