@@ -45,5 +45,5 @@ class FileIn(object):
                     else:
                         yield Token(match.group(), item.name)
             if i == 0:
-                raise error.TeXError(error.E_INPUT)
+                raise error.TeXError(error.INPUT)
         yield Token('', 'EOF')
