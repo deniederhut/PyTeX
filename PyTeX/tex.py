@@ -29,9 +29,9 @@ P_SECTION = regex('Section', re.compile(r'\\section'))
 P_SUBSECTION = regex('Subsection', re.compile(r'\\subsection'))
 P_START_ARG = regex('StartArgument', re.compile(r'\{'))
 P_START_OPT = regex('StartOption', re.compile(r'\['))
-P_TEXT = regex('Text', re.compile(r'[\w/`\'\,\.\(\)=@\*\-]+', flags=re.I))
+P_TEXT = regex('Text', re.compile(r'[\w/:`\'\,\.\(\)=@\*\-]+', flags=re.I))
 
-REGEX_LIST = [P_COMMENT, P_NEWLINE, P_MATH, P_ESCAPED, P_START_GEN, P_END_GEN, P_FUNCTION, P_START_ARG, P_START_OPT, P_END_ARG, P_END_OPT, P_TEXT]
+REGEX_LIST = [P_COMMENT, P_NEWLINE, P_SECTION, P_SUBSECTION, P_MATH, P_ESCAPED, P_START_GEN, P_END_GEN, P_FUNCTION, P_START_ARG, P_START_OPT, P_END_ARG, P_END_OPT, P_TEXT]
 
 
 class Parser(object):
@@ -112,11 +112,24 @@ class Parser(object):
         result = utilities.del_empty_keys(result)
         return {command : result}
 
+    def __parse_section__(self, conditions):
+        command = re.search(r'\w+', self.current.data).group()
+        result = {'data' : []}
+        self.next()
+        result['name'] = self.__parse_arguments__()
+        result['data'] = self.__recursive_parse__(conditions)
+        result = utilities.del_empty_keys(result)
+        return {command : result}
+
     def __recursive_parse__(self, condition):
         result = []
         while self.current.name not in condition:
             if self.current.name == 'Comment':
                 result.append(self.__parse_comment__())
+            elif self.current.name == 'Section':
+                result.append(self.__parse_section__(['Section', 'Enddocument']))
+            elif self.current.name == 'Subsection':
+                result.append(self.__parse_section__(['Section', 'Subsection', 'Enddocument']))
             elif self.current.name == 'Text':
                 result.append(self.__parse_text__())
             elif self.current.name == 'Math':
