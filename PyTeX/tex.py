@@ -25,8 +25,8 @@ P_FUNCTION = regex('Function', re.compile(r'\\\w+'))
 # P_ITEM = regex('Item', re.compile(r'\\item'))
 P_MATH = regex('Math', re.compile(r'\$'))
 P_NEWLINE = regex('Newline', re.compile(r'\n|\\\\'))
-#P_SECTION = regex('Section', re.compile(r'\\section'))
-#P_SUBSECTION = regex('Subsection', re.compile(r'\\subsection'))
+P_SECTION = regex('Section', re.compile(r'\\section'))
+P_SUBSECTION = regex('Subsection', re.compile(r'\\subsection'))
 P_START_ARG = regex('StartArgument', re.compile(r'\{'))
 P_START_OPT = regex('StartOption', re.compile(r'\['))
 P_TEXT = regex('Text', re.compile(r'[\w/`\'\,\.\(\)=@\*\-]+', flags=re.I))
@@ -77,7 +77,7 @@ class Parser(object):
     def __parse_arguments__(self):
         while self.current.name != 'EndArgument':
             self.next()
-            result = self.__recursive_parse__('EndArgument')
+            result = self.__recursive_parse__(['EndArgument'])
         self.next()
         return result
 
@@ -95,17 +95,17 @@ class Parser(object):
 
     def __parse_math__(self):
         self.next()
-        return {'equation' : self.__recursive_parse__('Math')}
+        return {'equation' : self.__recursive_parse__(['Math'])}
 
     def __parse_object__(self):
         result = {'options':[]}
         command = self.current.name.replace('Begin', '')
-        condition = self.current.name.replace('Begin', 'End')
+        condition = [self.current.name.replace('Begin', 'End')]
         self.next()
         if self.current.name == 'StartOption':
             result['options'] += self.__parse_options__()
         result['data'] = (self.__recursive_parse__(condition))
-        if self.current.name == condition:
+        if self.current.name in condition:
             self.next()
         else:
             raise error.TeXError(error.SYNTAX.format(self.current.name, condition))
@@ -114,7 +114,7 @@ class Parser(object):
 
     def __recursive_parse__(self, condition):
         result = []
-        while self.current.name != condition:
+        while self.current.name not in condition:
             if self.current.name == 'Comment':
                 result.append(self.__parse_comment__())
             elif self.current.name == 'Text':
@@ -135,4 +135,4 @@ class Parser(object):
 
     def parse(self):
         self.next()
-        return self.__recursive_parse__(condition='EOF')
+        return self.__recursive_parse__(condition=['EOF'])
