@@ -108,7 +108,7 @@ class Parser(object):
         if self.current.name == condition:
             self.next()
         else:
-            raise error.TeXError(error.E_SYNTAX.format(self.current.name, condition))
+            raise error.TeXError(error.SYNTAX.format(self.current.name, condition))
         result = utilities.del_empty_keys(result)
         return {command : result}
 
@@ -130,7 +130,7 @@ class Parser(object):
             elif self.current.name in condition:
                 break
             else:
-                raise error.TeXError(error.E_SYNTAX.format(self.current.name, condition))
+                raise error.TeXError(error.SYNTAX.format(self.current.name, condition))
         return result
 
     def parse(self):
